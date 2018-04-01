@@ -2,6 +2,8 @@
 
 namespace Phi\DOMTemplate;
 
+use Phi\DOM\Document;
+
 class XML extends \SimpleXMLElement
 {
 
@@ -72,6 +74,14 @@ class XML extends \SimpleXMLElement
         $dom->nodeValue = htmlspecialchars($value);
         //$simplexml=simplexml_import_dom($dom, get_class($this));
         //return $simplexml;
+    }
+
+
+    public function getDOM()
+    {
+
+        $dom = new Template($this->asHTML());
+        return $dom;
     }
 
 

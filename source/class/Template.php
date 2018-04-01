@@ -18,13 +18,16 @@ class Template
 
 
     protected $libXMLFlag;
+
+    /**
+     * @var Document
+     */
     protected $dom;
+
+    protected $simpleXML;
+
+
     protected $rootNode;
-
-
-
-
-    protected $variableCollection=array();
 
 
 
@@ -41,7 +44,7 @@ class Template
             | \LIBXML_NOWARNING
             | \LIBXML_ERR_NONE;
 
-        $this->template = $template;
+        $this->setTemplate($template);
     }
 
 
@@ -53,6 +56,7 @@ class Template
     public function setTemplate($template)
     {
         $this->template = $template;
+        $this->loadString((string) $this->template);
         return $this;
     }
 
@@ -73,10 +77,21 @@ class Template
     }
 
 
-    public function parseDOM($buffer)
+
+
+    public function getHTML()
     {
+        $dom = $this->dom;
+        $output=$dom->saveHTML();
 
+        //"bug" with saveHTML and "src" attribute
+        //replacing {{{  }}}} by %7B%7B%7B    %7D%7D%7D
+        $output=urldecode($output);
+        return $output;
+    }
 
+    public function loadString($buffer)
+    {
         libxml_use_internal_errors(true);
         $dom = new Document('1.0', 'utf-8');
 
@@ -90,18 +105,66 @@ class Template
 
 
         $this->rootNode = $dom->firstChild;
+        $this->dom = $dom;
+
+        return $this;
+    }
 
 
-        $output=$dom->saveHTML();
+    public function find($query)
+    {
+        $dom = $this->dom;
+        $converter = new CSSToXPath($query);
+        $xpathQuery = $converter->getXPath();
+        $xPath = new \DOMXPath($dom);
+        $nodes = $xPath->query($xpathQuery);
+        return $nodes;
+    }
+
+    public function each($query, $callback)
+    {
+
+        $nodes = $this->find($query);
+
+        $simpleXMLElements = array();
+
+        foreach ($nodes as $key => $node) {
 
 
-        //"bug" with saveHTML and "src" attribute
-        //replacing {{{  }}}} by %7B%7B%7B    %7D%7D%7D
-        $output=urldecode($output);
-        return $output;
+            $simpleXMLElement = new SimpleXMLElement(
+               $this->dom->saveXML($node)
+            );
+
+
+            $simpleXMLElements[$key] = array(
+                'source' => $node,
+                'copy' => $simpleXMLElement
+            );
+            $callback($simpleXMLElement, $key);
+
+        }
+
+
+        foreach ($simpleXMLElements as $descriptor) {
+
+            $newNode = dom_import_simplexml($descriptor['copy']);
+
+            $newNode = $this->dom->importNode($newNode, true);
+
+            $this->dom->replaceNodeWithNode(
+                $descriptor['source'],
+                $newNode
+            );
+        }
+
+
+        return $this;
 
 
     }
+
+
+
 
 
 
@@ -129,7 +192,7 @@ class Template
      */
     public function render()
     {
-        $output = $this->parseDOM($this->template, true);
+        $output = $this->getHTML();
         $this->output = $this->doAfterRendering($output);
         return $this->output;
     }
@@ -192,33 +255,5 @@ class Template
 
 
 
-    public function setVariable($name, $value) {
-        $this->variableCollection[$name]=$value;
-        return $this;
-    }
-
-
-    public function getVariable($name) {
-        if(isset($this->variableCollection[$name])) {
-            return $this->variableCollection[$name];
-        }
-        else {
-            return null;
-        }
-    }
-
-
-    public function getVariables() {
-        return $this->variableCollection;
-    }
-
-
-    public function setVariables(array $values) {
-        foreach ($values as $name=>$value) {
-            $this->setVariable($name, $value);
-        }
-
-        return $this;
-    }
 
 }
