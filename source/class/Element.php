@@ -151,11 +151,7 @@ class Element extends \Phi\DOMTemplate\XML
 
         $xpath = $this->$this->convertCSSToXPath($query);
 
-        echo '<pre id="' . __FILE__ . '-' . __LINE__ . '" style="border: solid 1px rgb(255,0,0); background-color:rgb(255,255,255)">';
-        echo '<div style="background-color:rgba(100,100,100,1); color: rgba(255,255,255,1)">' . __FILE__ . '@' . __LINE__ . '</div>';
-        print_r($xpath);
-        echo '</pre>';
-
+  
 
         $xpath = str_replace('///', '//', $xpath);
         $xpath = str_replace('//*//*', '//*', $xpath);
@@ -171,13 +167,7 @@ class Element extends \Phi\DOMTemplate\XML
 
         if(!$xpathObject) {
 
-            echo '<pre id="' . __FILE__ . '-' . __LINE__ . '" style="border: solid 1px rgb(255,0,0); background-color:rgb(255,255,255)">';
-            echo '<div style="background-color:rgba(100,100,100,1); color: rgba(255,255,255,1)">' . __FILE__ . '@' . __LINE__ . '</div>';
-            echo 'Xpath compilation failed. CSS selector : "'.$query.'" - Compiled Xpath : "'.$xpath.'"';
-            echo '</pre>';
-
-
-
+            $returnValue = new Collection(null, $query);
             //throw new \Exception('Xpath compilation failed. CSS selector : "'.$query.'" - Compiled Xpath : "'.$xpath.'"');
             //echo $query;
             //echo $xpath;
