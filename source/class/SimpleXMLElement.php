@@ -245,7 +245,7 @@ class SimpleXMLElement extends \Phi\DOMTemplate\XML
     }
 
 
-    protected function formatStyle($node)
+    public function formatStyle($node)
     {
 
         if ($node->style) {
@@ -264,6 +264,7 @@ class SimpleXMLElement extends \Phi\DOMTemplate\XML
 
     public function __set($attribute, $value)
     {
+
         echo '<pre id="' . __FILE__ . '-' . __LINE__ . '" style="border: solid 1px rgb(255,0,0); background-color:rgb(255,255,255)">';
         print_r($attribute);
         echo '</pre>';

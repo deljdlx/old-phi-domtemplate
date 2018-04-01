@@ -142,6 +142,7 @@ class Template
             );
             $callback($simpleXMLElement, $key);
 
+            $simpleXMLElement->formatStyle($simpleXMLElement);
         }
 
 
