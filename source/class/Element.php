@@ -151,7 +151,7 @@ class Element extends \Phi\DOMTemplate\XML
 
         $xpath = $this->$this->convertCSSToXPath($query);
 
-  
+
 
         $xpath = str_replace('///', '//', $xpath);
         $xpath = str_replace('//*//*', '//*', $xpath);
