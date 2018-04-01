@@ -1,0 +1,13 @@
+{
+	"name": "phi-domtemplate",
+	"description": "Phi DOM template",
+
+	"autoload": {
+		"psr-4": {
+			"Phi\\DomTemplate\\": "source/class"
+		},
+		"files": [
+
+		]
+	}
+}
