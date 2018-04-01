@@ -1,7 +1,13 @@
 {
 	"name": "phi-domtemplate",
 	"description": "Phi DOM template",
-
+	"repositories": [
+		{"type": "vcs", "url": "https://github.com/ElBiniou/phi-dom"}
+	],
+	"require":
+	{
+		"phi-dom": "dev-master"
+	},
 	"autoload": {
 		"psr-4": {
 			"Phi\\DOMTemplate\\": "source/class"
