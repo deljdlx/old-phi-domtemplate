@@ -4,7 +4,7 @@
 
 	"autoload": {
 		"psr-4": {
-			"Phi\\DomTemplate\\": "source/class"
+			"Phi\\DOMTemplate\\": "source/class"
 		},
 		"files": [
 
