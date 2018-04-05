@@ -4,7 +4,6 @@ namespace Phi\DOMTemplate;
 
 use Phi\DOM\Document;
 
-use Phi\DOM\Document;
 
 class Template
 {
