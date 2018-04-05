@@ -4,6 +4,8 @@ namespace Phi\DOMTemplate;
 
 use Phi\DOM\Document;
 
+use Phi\DOM\Document;
+
 class Template
 {
 
@@ -17,13 +19,16 @@ class Template
 
 
     protected $libXMLFlag;
+
+    /**
+     * @var Document
+     */
     protected $dom;
+
+    protected $simpleXML;
+
+
     protected $rootNode;
-
-
-
-
-    protected $variableCollection=array();
 
 
 
@@ -40,7 +45,7 @@ class Template
             | \LIBXML_NOWARNING
             | \LIBXML_ERR_NONE;
 
-        $this->template = $template;
+        $this->setTemplate($template);
     }
 
 
@@ -52,6 +57,7 @@ class Template
     public function setTemplate($template)
     {
         $this->template = $template;
+        $this->loadString((string) $this->template);
         return $this;
     }
 
@@ -72,10 +78,21 @@ class Template
     }
 
 
-    public function parseDOM($buffer)
+
+
+    public function getHTML()
     {
+        $dom = $this->dom;
+        $output=$dom->saveHTML();
 
+        //"bug" with saveHTML and "src" attribute
+        //replacing {{{  }}}} by %7B%7B%7B    %7D%7D%7D
+        $output=urldecode($output);
+        return $output;
+    }
 
+    public function loadString($buffer)
+    {
         libxml_use_internal_errors(true);
         $dom = new Document('1.0', 'utf-8');
 
@@ -89,52 +106,67 @@ class Template
 
 
         $this->rootNode = $dom->firstChild;
+        $this->dom = $dom;
 
-        if ($this->componentEnabled) {
-            $this->initializeComponentParsing();
+        return $this;
+    }
+
+
+    public function find($query)
+    {
+        $dom = $this->dom;
+        $converter = new CSSToXPath($query);
+        $xpathQuery = $converter->getXPath();
+        $xPath = new \DOMXPath($dom);
+        $nodes = $xPath->query($xpathQuery);
+        return $nodes;
+    }
+
+    public function each($query, $callback)
+    {
+
+        $nodes = $this->find($query);
+
+        $simpleXMLElements = array();
+
+        foreach ($nodes as $key => $node) {
+
+
+            $simpleXMLElement = new SimpleXMLElement(
+               $this->dom->saveXML($node)
+            );
+
+
+            $simpleXMLElements[$key] = array(
+                'source' => $node,
+                'copy' => $simpleXMLElement
+            );
+            $callback($simpleXMLElement, $key);
+
+            $simpleXMLElement->formatStyle($simpleXMLElement);
         }
 
 
-        foreach ($this->customTags as $tagName => $customTag) {
+        foreach ($simpleXMLElements as $descriptor) {
 
-            $query = '//' . $tagName;
+            $newNode = dom_import_simplexml($descriptor['copy']);
 
-            //$query = '//' . $tagName.'//*[not('.$tagName.')]';
-            //$query = '//*[not('.$tagName.')]'.'//' . $tagName;
-            //BBB//*[not(BBB)]
+            $newNode = $this->dom->importNode($newNode, true);
 
-            $xPath = new \DOMXPath($dom);
-            $nodes = $xPath->query($query);
-
-            foreach ($nodes as $node) {
-
-                /*
-                echo '<pre id="' . __FILE__ . '-' . __LINE__ . '" style="border: solid 1px rgb(255,0,0); background-color:rgb(255,255,255)">';
-                echo '<div style="background-color:rgba(100,100,100,1); color: rgba(255,255,255,1)">' . __FILE__ . '@' . __LINE__ . '</div>';
-                echo get_class($this).' : ';
-                print_r($tagName);
-                echo '</pre>';
-                */
-
-
-                $nodeContent = $dom->innerXML($node);
-
-                $content = call_user_func_array(array($customTag, 'render'), array($nodeContent, $node));
-
-                $dom->replaceNodeWithContent($node, $content);
-            }
+            $this->dom->replaceNodeWithNode(
+                $descriptor['source'],
+                $newNode
+            );
         }
 
-        $output=$dom->saveHTML();
 
-
-        //"bug" with saveHTML and "src" attribute
-        //replacing {{{  }}}} by %7B%7B%7B    %7D%7D%7D
-        $output=urldecode($output);
-        return $output;
+        return $this;
 
 
     }
+
+
+
 
 
 
@@ -162,7 +194,7 @@ class Template
      */
     public function render()
     {
-        $output = $this->parseDOM($this->template, true);
+        $output = $this->getHTML();
         $this->output = $this->doAfterRendering($output);
         return $this->output;
     }
@@ -225,33 +257,5 @@ class Template
 
 
 
-    public function setVariable($name, $value) {
-        $this->variableCollection[$name]=$value;
-        return $this;
-    }
-
-
-    public function getVariable($name) {
-        if(isset($this->variableCollection[$name])) {
-            return $this->variableCollection[$name];
-        }
-        else {
-            return null;
-        }
-    }
-
-
-    public function getVariables() {
-        return $this->variableCollection;
-    }
-
-
-    public function setVariables(array $values) {
-        foreach ($values as $name=>$value) {
-            $this->setVariable($name, $value);
-        }
-
-        return $this;
-    }
 
 }
